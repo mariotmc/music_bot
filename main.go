@@ -8,16 +8,19 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 )
 
-func main()  {
-	sess, err := discordgo.New("Bot MTEzMDEwNDMzNDY5MzE3MTIwMA.GgQQYN.PY4RwBh2fPqVx7Fd5gWIjSS-qtQJe9FmjEfp5c")
+func main() {
+	token := loadToken()
+
+	sess, err := discordgo.New(token)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sess.AddHandler(func (s *discordgo.Session, m *discordgo.MessageCreate) {
+	sess.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
@@ -42,4 +45,16 @@ func main()  {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
+}
+
+func loadToken() string {
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading env variables %s", err)
+	}
+
+	token := os.Getenv("TOKEN")
+
+	return token
 }
