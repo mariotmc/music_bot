@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -25,25 +24,15 @@ func main() {
 			return
 		}
 
-		fmt.Printf("%+v", m.ChannelID)
-		fmt.Println("")
-		fmt.Printf("%+v", m.GuildID)
-		fmt.Println("")
-
 		if m.Content == "hi" {
 			s.ChannelMessageSend(m.ChannelID, "hello")
+			voiceState, _ := s.State.VoiceState("1130105289031557222", "291221870928199681")
+			authorChannelID := voiceState.ChannelID
+			s.ChannelVoiceJoin("1130105289031557222", authorChannelID, false, false)
 		}
-
-		//channel := m.ChannelID
-		fmt.Printf("%+v", m.Author.ID)
-
-		//s.ChannelVoiceJoin("1130105289031557222", "1130105289551646743", false, false)
-
-		s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
-
 	})
 
-	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
+	sess.Identify.Intents = discordgo.IntentsAll
 
 	err = sess.Open()
 
@@ -52,8 +41,6 @@ func main() {
 	}
 
 	defer sess.Close()
-
-	fmt.Println("The bot is online")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
