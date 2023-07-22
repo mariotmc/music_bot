@@ -26,7 +26,12 @@ func main() {
 
 		if m.Content == "hi" {
 			s.ChannelMessageSend(m.ChannelID, "hello")
-			voiceState, _ := s.State.VoiceState("1130105289031557222", "291221870928199681")
+			voiceState, err := s.State.VoiceState("1130105289031557222", m.Author.ID)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			authorChannelID := voiceState.ChannelID
 			s.ChannelVoiceJoin("1130105289031557222", authorChannelID, false, false)
 		}
