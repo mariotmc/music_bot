@@ -25,9 +25,22 @@ func main() {
 			return
 		}
 
+		fmt.Printf("%+v", m.ChannelID)
+		fmt.Println("")
+		fmt.Printf("%+v", m.GuildID)
+		fmt.Println("")
+
 		if m.Content == "hi" {
 			s.ChannelMessageSend(m.ChannelID, "hello")
 		}
+
+		//channel := m.ChannelID
+		fmt.Printf("%+v", m.Author.ID)
+
+		//s.ChannelVoiceJoin("1130105289031557222", "1130105289551646743", false, false)
+
+		s.ChannelVoiceJoin(m.GuildID, m.ChannelID, false, false)
+
 	})
 
 	sess.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
