@@ -9,3 +9,7 @@
 - play, pause, queue, next, previous, delete, list queue\*
 
 - log
+
+# Issues
+
+- If user is not connected to a voice channel when calling the bot -> throws error
