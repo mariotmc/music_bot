@@ -1,18 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
-	"github.com/Andreychik32/ytdl"
-	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/jonas747/dca"
+	"github.com/kkdai/youtube/v2"
 )
 
 func main() {
@@ -121,47 +121,57 @@ func playFromYouTubeURL(s *discordgo.Session, guildID, userID, url string) error
 }
 
 func downloadYouTubeAudio(url string) (string, error) {
-	// Create a new video info object.
-	ctx := context.Background()
-	client := ytdl.DefaultClient
-	videoInfo, err := ytdl.GetVideoInfo(ctx, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-	if err != nil {
-		return "", err
-	}
+	// videoID is hard-coded for now, will need to be extracted from provided URL
+	videoID := "a3ICNMQW7Ok"
+	client := youtube.Client{}
 
-	// Download the audio stream.
-	audioFile, err := os.Create(videoInfo.Title + ".mp4")
-	if err != nil {
-		return "", err
-	}
-	defer audioFile.Close()
-
-	err = client.Download(ctx, videoInfo, videoInfo.Formats[0], audioFile)
+	video, err := client.GetVideo(videoID)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("%+v", err)
+	formats := video.Formats.WithAudioChannels() // only get videos with audio
+	stream, _, err := client.GetStream(video, &formats[0])
+	if err != nil {
+		panic(err)
+	}
 
-	return videoInfo.Title + ".mp4", err
+	file, err := os.Create("video.mp4")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, stream)
+	if err != nil {
+		panic(err)
+	}
+
+	return file.Name(), err
 }
 
 func playAudio(vc *discordgo.VoiceConnection, audioFile string) error {
-	// Open the audio file.
-	file, err := os.Open(audioFile)
+	// Create a new dca encoder.
+	options := dca.StdEncodeOptions
+	options.RawOutput = true
+	encoder, err := dca.EncodeFile(audioFile, options)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer encoder.Cleanup()
 
 	// Start speaking.
 	vc.Speaking(true)
 
 	// Send the audio packets.
-	dgvoice.PlayAudioFile(vc, "test.mp3", make(chan bool))
+	done := make(chan error)
+	dca.NewStream(encoder, vc, done)
+
+	// Wait for the stream to finish.
+	err = <-done
 
 	// Stop speaking.
 	vc.Speaking(false)
 
-	return nil
+	return err
 }
