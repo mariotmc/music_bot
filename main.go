@@ -15,6 +15,8 @@ import (
 	"github.com/kkdai/youtube/v2"
 )
 
+var controlChan = make(chan bool)
+
 func main() {
 	token := loadToken()
 
@@ -55,6 +57,16 @@ func loadToken() string {
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID || m.Author.Bot {
+		return
+	}
+
+	if strings.HasPrefix(m.Content, "!pause") {
+		// Pause the audio playback.
+		controlChan <- false
+		return
+		} else if strings.HasPrefix(m.Content, "!resume") {
+		// Resume the audio playback.
+		controlChan <- true
 		return
 	}
 
@@ -109,8 +121,10 @@ func playFromYouTubeURL(s *discordgo.Session, guildID, userID, url string) error
 	// Start playing the audio in the voice channel.
 	vc.Speaking(true)
 
-	// Encode and send the audio packets to the voice connection.
-	dgvoice.PlayAudioFile(vc, audioFile, make(chan bool))
+	dgvoice.PlayAudioFile(vc, audioFile, controlChan)
+
+	// Wait for a signal to stop the playback.
+	<-controlChan
 
 	vc.Speaking(false)
 
@@ -132,7 +146,7 @@ func downloadYouTubeAudio(url string) (string, error) {
 		panic(err)
 	}
 
-	file, err := os.Create("video.mp4")
+	file, err := os.Create("audio.mp3")
 	if err != nil {
 		panic(err)
 	}
