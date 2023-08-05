@@ -53,25 +53,25 @@ func loadToken() string {
 	return token
 }
 
-func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate)  {
-		if m.Author.ID == s.State.User.ID || m.Author.Bot {
-			return
-		}
+func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.ID == s.State.User.ID || m.Author.Bot {
+		return
+	}
 
-		// Check if the message starts with the command prefix, such as "!play".
-		if !strings.HasPrefix(m.Content, "!play") {
-			return
-		}
+	// Check if the message starts with the command prefix, such as "!play".
+	if !strings.HasPrefix(m.Content, "!play") {
+		return
+	}
 
-		// Extract the YouTube URL from the message content.
-		youtubeURL := strings.TrimSpace(strings.TrimPrefix(m.Content, "!play"))
+	// Extract the YouTube URL from the message content.
+	youtubeURL := strings.TrimSpace(strings.TrimPrefix(m.Content, "!play"))
 
-		// Play the song from the YouTube URL.
-		err := playFromYouTubeURL(s, m.GuildID, m.Author.ID, youtubeURL)
-		if err != nil {
-			fmt.Println("Error playing song: ", err)
-			return
-		}
+	// Play the song from the YouTube URL.
+	err := playFromYouTubeURL(s, m.GuildID, m.Author.ID, youtubeURL)
+	if err != nil {
+		fmt.Println("Error playing song: ", err)
+		return
+	}
 }
 
 func connectToVoiceChannel(s *discordgo.Session, guildID, userID string) (*discordgo.VoiceConnection, error) {
@@ -145,4 +145,3 @@ func downloadYouTubeAudio(url string) (string, error) {
 
 	return file.Name(), err
 }
-
